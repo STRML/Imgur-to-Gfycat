@@ -7,7 +7,8 @@ var gfyEndpoints = {
   fetch: 'http://gfycat.com/fetch/'
 };
 var gifRegex = /.*imgur.com\/.*\.gif(?:\?.*)?$/;
-var forEach = Array.prototype.forEach;
+var forEach = Array.prototype.forEach.call.bind(Array.prototype.forEach);
+var slice = Array.prototype.slice.call.bind(Array.prototype.slice);
 
 function init(){
   embedGfyCat();
@@ -17,7 +18,8 @@ function init(){
 
 function scan(element){
   if (!element) element = document;
-  if (element.nodeType !== 1) return; // text nodes, etc
+  // Allow elements, docs, and doc fragments. Others are ignored.
+  if ([1, 9, 11].indexOf(element.nodeType) === -1 ) return;
   var imgs = element.getElementsByTagName('img');
   var anchors = element.querySelectorAll('a[href*=".gif"]');
 
@@ -34,7 +36,7 @@ function scan(element){
 function attachMutationObservers(){
   var observer = new WebKitMutationObserver(function(mutations) {
     mutations.forEach(function(m){
-      forEach.call(m.addedNodes, scan);
+      forEach(m.addedNodes, scan);
     });
   });
   observer.observe(document.body, { childList: true, subtree: true });
@@ -44,17 +46,26 @@ function attachMutationObservers(){
 // request to gfycat so it can create and convert the file. When it finishes, it will redirect
 // to the gfycat link so we can embed into the page.
 function replaceGif(imgNode){
-  if (!isGif(imgNode.src)) return;
+  if (!isImgurGif(imgNode.src)) return;
+
+  // If this contains a fetch url (RES creates images from anchors), remove it
+  if (imgNode.src.indexOf(gfyEndpoints.fetch) !== -1){
+    imgNode.src = imgNode.src.replace(gfyEndpoints.fetch, '');
+  }
+
   var parent = imgNode.parentNode;
   imgNode.style.display = 'none'; // hide while we are waiting for gfycat
 
-  getGfyUrl(imgNode.src, function onSuccess(id){
+  // url, cb, errorCb
+  getGfyUrl(imgNode.src, replaceGifWithGfy, revert);
+
+  function replaceGifWithGfy(id){
     // Remove the image and replace with the gfycat stub so gfycat's js can handle it.
     parent.removeChild(imgNode);
 
     // Remove any RES placeholders nearby.
     var RESPlaceholders = parent.getElementsByClassName('RESImagePlaceholder');
-    forEach.call(RESPlaceholders, parent.removeChild.bind(parent));
+    forEach(RESPlaceholders, parent.removeChild.bind(parent));
 
     // Create gfy img tag, which will be picked up by their js.
     var gfyImg = document.createElement('img');
@@ -62,29 +73,33 @@ function replaceGif(imgNode){
     gfyImg.setAttribute('data-id', id);
     parent.appendChild(gfyImg);
 
-    // Update any anchors to the new gfy url
-    var src = gfyEndpoints.fetch + imgNode.src;
-    var anchors = document.querySelectorAll('a[href="' + src + '"]');
-    for (var i = 0; i < anchors.length; i++){
-      if (anchors[i].href === src) anchors[i].href = 'http://gfycat.com/' + id;
-    }
+    // Update any anchors to the new gfy url. Replace those prepended with /fetch/ and without.
+    var fetchAnchors = document.querySelectorAll('a[href="' + gfyEndpoints.fetch + imgNode.src + '"]');
+    var otherAnchors = document.querySelectorAll('a[href="' + imgNode.src + '"]');
+    var anchors = slice(fetchAnchors).concat(slice(otherAnchors)); // pfff
+    anchors.forEach(function(a){
+      if (a.href === imgNode.src) a.href = 'http://gfycat.com/' + id;
+    });
 
     runGfyCat();
-  }, function onError(err){
+  }
+
+  function revert(err){
     // Just show the old gif.
     imgNode.style.display = '';
     imgNode.src += '?ignoreGfy'; // allow us through webRequest blocker
-  });
+  }
 }
 
+// Replace an anchor link with a link to gfycat's fetch endpoint.
 function replaceAnchor(anchorNode){
-  if (!isGif(anchorNode.href)) return;
+  if (!isImgurGif(anchorNode.href)) return;
   if (anchorNode.getAttribute('data-gyffied')) return;
   anchorNode.href = gfyEndpoints.fetch + anchorNode.href;
   anchorNode.setAttribute('data-gyffied', true);
 }
 
-function isGif(url){
+function isImgurGif(url){
   return gifRegex.test(url);
 }
 
