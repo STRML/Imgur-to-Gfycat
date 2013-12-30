@@ -5,6 +5,7 @@ var gfyEndpoints = {
   status: 'http://gfycat.com/cajax/get/',
   checkURL: 'http://gfycat.com/cajax/checkUrl/'
 };
+var gifRegex = /.*imgur.com\/.*\.gif$/;
 
 function init(){
   embedGfyCat();
@@ -67,7 +68,7 @@ function replaceAnchor(anchorNode){
 }
 
 function isGif(url){
-  return url.slice(-4) === '.gif' && url.indexOf('imgur.com') !== -1; // TODO regex to catch fragments
+  return gifRegex.test(url);
 }
 
 // Run /transcodeRelease to get the gfyURL. If the gfy exists, it will immediately be returned

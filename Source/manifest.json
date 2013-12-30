@@ -3,9 +3,6 @@
 	"name": "Imgur to Gfycat",
 	"version": "1.0",
 	"description": "Replaces imgur gifs with gfycat optimized videos and gifs.",
-	"permissions": [
-		"history"
-	],
 	"web_accessible_resources": ["gfyembed.js"],
 	"content_scripts": 
 	[
