@@ -4,7 +4,8 @@ var gfyEndpoints = {
   transcodeRelease: 'http://upload.gfycat.com/transcodeRelease/',
   status: 'http://gfycat.com/cajax/get/',
   checkURL: 'http://gfycat.com/cajax/checkUrl/',
-  fetch: 'http://gfycat.com/fetch/'
+  fetch: 'http://gfycat.com/fetch/',
+  home: 'http://gfycat.com/'
 };
 var gifRegex = /.*imgur.com\/.*\.gif(?:\?.*)?$/;
 var forEach = Array.prototype.forEach.call.bind(Array.prototype.forEach);
@@ -74,11 +75,11 @@ function replaceGif(imgNode){
     parent.appendChild(gfyImg);
 
     // Update any anchors to the new gfy url. Replace those prepended with /fetch/ and without.
-    var fetchAnchors = document.querySelectorAll('a[href="' + gfyEndpoints.fetch + imgNode.src + '"]');
-    var otherAnchors = document.querySelectorAll('a[href="' + imgNode.src + '"]');
-    var anchors = slice(fetchAnchors).concat(slice(otherAnchors)); // pfff
-    anchors.forEach(function(a){
-      if (a.href === imgNode.src) a.href = 'http://gfycat.com/' + id;
+    [gfyEndpoints.fetch + imgNode.src, imgNode.src].forEach(function(src){
+      var anchors = document.querySelectorAll('a[href="' + src + '"]');
+      forEach(anchors, function(a){
+        if (a.href === src) a.href = gfyEndpoints.home + id;
+      });
     });
 
     runGfyCat();
@@ -95,6 +96,7 @@ function replaceGif(imgNode){
 function replaceAnchor(anchorNode){
   if (!isImgurGif(anchorNode.href)) return;
   if (anchorNode.getAttribute('data-gyffied')) return;
+  if (anchorNode.href.indexOf(gfyEndpoints.fetch) !== -1) return;
   anchorNode.href = gfyEndpoints.fetch + anchorNode.href;
   anchorNode.setAttribute('data-gyffied', true);
 }
