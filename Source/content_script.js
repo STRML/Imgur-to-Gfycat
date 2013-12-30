@@ -6,6 +6,7 @@ var gfyEndpoints = {
   checkURL: 'http://gfycat.com/cajax/checkUrl/'
 };
 var gifRegex = /.*imgur.com\/.*\.gif$/;
+var forEach = Array.prototype.forEach;
 
 function init(){
   embedGfyCat();
@@ -32,7 +33,7 @@ function scan(element){
 function attachMutationObservers(){
   var observer = new WebKitMutationObserver(function(mutations) {
     mutations.forEach(function(m){
-      Array.prototype.forEach.call(m.addedNodes, scan);
+      forEach.call(m.addedNodes, scan);
     });
   });
   observer.observe(document.body, { childList: true, subtree: true });
@@ -49,6 +50,12 @@ function replaceGif(imgNode){
   getGfyUrl(imgNode.src, function onSuccess(id){
     // Remove the image and replace with the gfycat stub so gfycat's js can handle it.
     parent.removeChild(imgNode);
+
+    // Remove any RES placeholders nearby.
+    var RESPlaceholders = parent.getElementsByClassName("RESImagePlaceholder");
+    forEach.call(RESPlaceholders, parent.removeChild.bind(parent));
+
+    // Create gfy img tag, which will be picked up by their js.
     var gfyImg = document.createElement('img');
     gfyImg.setAttribute('class', 'gfyitem');
     gfyImg.setAttribute('data-id', id);
