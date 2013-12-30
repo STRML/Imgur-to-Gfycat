@@ -7,7 +7,7 @@
 	"content_scripts": 
 	[
 		{
-			"matches": ["*://*/*"],
+			"matches": ["http://*/*"],
 			"js": ["superagent.js", "content_script.js"],
 			"run_at": "document_end"
 		}
