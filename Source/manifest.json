@@ -4,6 +4,15 @@
 	"version": "1.0",
 	"description": "Replaces imgur gifs with gfycat optimized videos and gifs.",
 	"web_accessible_resources": ["gfyembed.js"],
+	"permissions": [
+	  "webRequest",
+	  "webRequestBlocking",
+	  "*://*.imgur.com/*"
+	],
+	"background": {
+		"scripts" : ["bg.js"],
+		"persistent": true
+	},
 	"content_scripts": 
 	[
 		{

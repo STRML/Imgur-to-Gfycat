@@ -3,9 +3,10 @@ var gfyEndpoints = {
   transcode: 'http://upload.gfycat.com/transcode/',
   transcodeRelease: 'http://upload.gfycat.com/transcodeRelease/',
   status: 'http://gfycat.com/cajax/get/',
-  checkURL: 'http://gfycat.com/cajax/checkUrl/'
+  checkURL: 'http://gfycat.com/cajax/checkUrl/',
+  fetch: 'http://gfycat.com/fetch/'
 };
-var gifRegex = /.*imgur.com\/.*\.gif$/;
+var gifRegex = /.*imgur.com\/.*\.gif(?:\?.*)?$/;
 var forEach = Array.prototype.forEach;
 
 function init(){
@@ -18,7 +19,7 @@ function scan(element){
   if (!element) element = document;
   if (element.nodeType !== 1) return; // text nodes, etc
   var imgs = element.getElementsByTagName('img');
-  var anchors = element.getElementsByTagName('a');
+  var anchors = element.querySelectorAll('a[href*=".gif"]');
 
   for (var i = 0; i < imgs.length; i++){
     replaceGif(imgs[i]);
@@ -45,14 +46,14 @@ function attachMutationObservers(){
 function replaceGif(imgNode){
   if (!isGif(imgNode.src)) return;
   var parent = imgNode.parentNode;
-  imgNode.style.display = "none"; // hide while we are waiting for gfycat
+  imgNode.style.display = 'none'; // hide while we are waiting for gfycat
 
   getGfyUrl(imgNode.src, function onSuccess(id){
     // Remove the image and replace with the gfycat stub so gfycat's js can handle it.
     parent.removeChild(imgNode);
 
     // Remove any RES placeholders nearby.
-    var RESPlaceholders = parent.getElementsByClassName("RESImagePlaceholder");
+    var RESPlaceholders = parent.getElementsByClassName('RESImagePlaceholder');
     forEach.call(RESPlaceholders, parent.removeChild.bind(parent));
 
     // Create gfy img tag, which will be picked up by their js.
@@ -60,17 +61,26 @@ function replaceGif(imgNode){
     gfyImg.setAttribute('class', 'gfyitem');
     gfyImg.setAttribute('data-id', id);
     parent.appendChild(gfyImg);
+
+    // Update any anchors to the new gfy url
+    var src = gfyEndpoints.fetch + imgNode.src;
+    var anchors = document.querySelectorAll('a[href="' + src + '"]');
+    for (var i = 0; i < anchors.length; i++){
+      if (anchors[i].href === src) anchors[i].href = 'http://gfycat.com/' + id;
+    }
+
     runGfyCat();
   }, function onError(err){
     // Just show the old gif.
-    imgNode.style.display = "";
+    imgNode.style.display = '';
+    imgNode.src += '?ignoreGfy'; // allow us through webRequest blocker
   });
 }
 
 function replaceAnchor(anchorNode){
   if (!isGif(anchorNode.href)) return;
   if (anchorNode.getAttribute('data-gyffied')) return;
-  anchorNode.href = '//gfycat.com/fetch/' + anchorNode.href;
+  anchorNode.href = gfyEndpoints.fetch + anchorNode.href;
   anchorNode.setAttribute('data-gyffied', true);
 }
 
@@ -82,13 +92,13 @@ function isGif(url){
 // and everybody's happy. Otherwise, we return an error which will replace the gif. The image will be transcoded
 // in the background for the next user.
 function getGfyUrl(url, cb, errorCb){
-  var endpoint = gfyEndpoints.transcodeRelease + randomString() + "?fetchUrl=" + encodeURI(url);
+  var endpoint = gfyEndpoints.transcodeRelease + randomString() + '?fetchUrl=' + encodeURI(url);
   request.get(gfyEndpoints.transcodeRelease + randomString())
     .query({fetchUrl: url})
     .end(function(err, res){
       if (err) return errorCb(err);
       if (res.body.gfyName) cb(res.body.gfyName);
-      else errorCb(new Error("Transcode in progress"));
+      else errorCb(new Error('Transcode in progress'));
     });
 }
 
@@ -105,15 +115,15 @@ function embedGfyCat(){
 // Run gfycat's init() function, which will find all convertable images and convert them.
 function runGfyCat(){
   var script = document.createElement('script');
-  script.type = "text/javascript";
-  var script_innards = document.createTextNode("window.gfyCollection.init();");
+  script.type = 'text/javascript';
+  var script_innards = document.createTextNode('window.gfyCollection.init();');
   script.appendChild(script_innards);
   (document.body || document.head || document.documentElement).appendChild(script);
 }
 
 function randomString(){
-  var c = "";
-  var a = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  var c = '';
+  var a = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   for (var b = 0; b < 10; b++) {
       c += a.charAt(Math.floor(Math.random() * a.length));
   }
