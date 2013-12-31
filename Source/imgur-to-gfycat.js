@@ -74,6 +74,13 @@ function replaceGif(imgNode){
     gfyImg.setAttribute('data-id', id);
     parent.appendChild(gfyImg);
 
+    // Fix controls overflowing with RES
+    if(parent.classList.contains('madeVisible')){
+      parent.addEventListener('mouseover', function(){ this.style['padding-bottom'] = '60px'; });
+      parent.addEventListener('mouseout', function(){ this.style['padding-bottom'] = '0px'; });
+      parent.style.transition = 'padding 0.5s';
+    }
+
     // Update any anchors to the new gfy url. Replace those prepended with /fetch/ and without.
     [gfyEndpoints.fetch + imgNode.src, imgNode.src].forEach(function(src){
       var anchors = document.querySelectorAll('a[href="' + src + '"]');
