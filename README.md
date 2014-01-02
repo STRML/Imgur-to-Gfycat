@@ -3,6 +3,8 @@ imgur-to-gfycat
 
 Works with Reddit Enhancement Suite and anywhere imgur.com gifs are shown!
 
+[Download from Chrome Web Store](https://chrome.google.com/webstore/detail/imgur-to-gfycat/idnninnhcleaikepmmomfnknbldalnjj)
+
 ![cat](http://i.imgur.com/ZmO5HxX.jpg)
 
 Chrome extension that replaces gifs hosted by imgur to HTML5-optimized video converted and hosted
