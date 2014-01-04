@@ -130,6 +130,10 @@ function getGfyUrl(url, cb, errorCb){
 function embedGfyCat(){
   // Skip if this has already been done
   if (document.getElementById('gfycatjs')) return;
+  // Don't break fetch urls
+  if (window.location.href.indexOf("gfycat.com/fetch") !== -1) return;
+
+  // Create embed script
   var script = document.createElement('script');
   script.src = chrome.extension.getURL('gfyembed.js');
   script.id = 'gfycatjs';
