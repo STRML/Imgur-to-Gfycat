@@ -2,7 +2,7 @@
 	"manifest_version": 2,
 	"name": "Imgur to Gfycat",
 	"short_name": "Imgur to Gfy",
-	"version": "1.1.2",
+	"version": "1.1.3",
 	"description": "Replaces imgur gifs with gfycat optimized videos and gifs.",
 	"icons": {
 		"128": "icon.png"
