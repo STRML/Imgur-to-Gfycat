@@ -11,12 +11,13 @@ var gifRegex = /.*imgur.com\/.*\.gif(?:\?.*)?$/;
 var forEach = Array.prototype.forEach.call.bind(Array.prototype.forEach);
 var slice = Array.prototype.slice.call.bind(Array.prototype.slice);
 
-function init(){
-  embedGfyCat();
+// Start.
+(function init(){
   attachMutationObservers();
   scan();
-}
+})();
 
+// Scan page for <img> and <a> tags to replace.
 function scan(element){
   if (!element) element = document;
   // Allow elements, docs, and doc fragments. Others are ignored.
@@ -166,8 +167,6 @@ function getGfyUrl(url, cb, errorCb){
 function embedGfyCat(){
   // Skip if this has already been done
   if (document.getElementById('gfycatjs')) return;
-  // Don't break fetch urls
-  if (window.location.href.indexOf("gfycat.com/fetch") !== -1) return;
 
   // Create embed script
   var script = document.createElement('script');
@@ -177,13 +176,35 @@ function embedGfyCat(){
 }
 
 // Run gfycat's init() function, which will find all convertable images and convert them.
+// Can't invoke this directly as it relies on jsonp, but will execute in this context
+// if invoked here - jsonp callback will fail.
 function runGfyCat(){
+  embedGfyCat();
   var script = document.createElement('script');
   script.type = 'text/javascript';
-  var script_innards = document.createTextNode('window.gfyCollection.init();');
+  var script_innards = document.createTextNode("(" + initGfy.toString() + ")();");
   script.appendChild(script_innards);
   (document.body || document.head || document.documentElement).appendChild(script);
+
+  // GfyCollection.init() will use document.getElementsByClassName to find gfyable objects
+  function initGfy(){
+    // Run now if possible (save 16ms)
+    if (window.gfyCollection && window.gfyCollection.init){
+      return window.gfyCollection.init();
+    }
+    // Wait for it to exist on page before running
+    var checkInterval = setInterval(function(){
+      if (window.gfyCollection && window.gfyCollection.init){
+        window.gfyCollection.init();
+        clearInterval(checkInterval);
+      }
+    }, 1);
+  }
 }
+
+//
+// UTILS
+// 
 
 function randomString(){
   var c = '';
@@ -193,6 +214,3 @@ function randomString(){
   }
   return c;
 }
-
-// Kickoff
-init();
