@@ -74,12 +74,11 @@ function replaceGif(imgNode){
     gfyImg.setAttribute('data-id', id);
     parent.appendChild(gfyImg);
 
-    // Fix controls overflowing with RES
-    if(parent.classList.contains('madeVisible')){
-      parent.addEventListener('mouseover', function(){ this.style['padding-bottom'] = '60px'; });
-      parent.addEventListener('mouseout', function(){ this.style['padding-bottom'] = '0px'; });
-      parent.style.transition = 'padding 0.5s';
-    }
+    // RES
+    handleRES(parent);
+
+    // Fix anchor navigation
+    preventRedirectOnCtrlClick(parent);
 
     // Update any anchors to the new gfy url. Replace those prepended with /fetch/ and without.
     [gfyEndpoints.fetch + imgNode.src, imgNode.src].forEach(function(src){
@@ -90,6 +89,43 @@ function replaceGif(imgNode){
     });
 
     runGfyCat();
+  }
+
+  // RES hacks
+  function handleRES(parent){
+    // RES detection
+    if(!parent.classList.contains('madeVisible')) return;
+
+    // Fix overflow
+    parent.addEventListener('mouseover', function(){ this.style['padding-bottom'] = '60px'; });
+    parent.addEventListener('mouseout', function(){ this.style['padding-bottom'] = '0px'; });
+    parent.style.transition = 'padding 0.5s';
+  }
+
+  // Fix controls (surrounding anchor causes redirect)
+  function preventRedirectOnCtrlClick(parent){
+    // Find any enclosing anchor tags
+    while(parent){
+      if (parent.tagName === "A"){
+        addCancelListener(parent);
+      }
+      parent = parent.parentNode;
+    }
+
+    // Cancel clicks if the target is a descendant of the ctrlbox
+    function addCancelListener(el){
+      el.addEventListener('click', function(e){
+        var target = e.target;
+        while(target){
+          // Cancel event if we hit a ctrl widget
+          if (target.classList.contains('gfyCtrlBox')){
+            e.preventDefault();
+            break;
+          }
+          target = target.parentNode;
+        }
+      });
+    }
   }
 
   function revert(err){
