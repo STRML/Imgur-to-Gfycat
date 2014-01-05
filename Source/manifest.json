@@ -21,7 +21,7 @@
 	[
 		{
 			"matches": ["http://*/*"],
-			"js": ["superagent.js", "imgur-to-gfycat.js"],
+			"js": ["superagent.js", "imgur-to-gfycat.js", "drag-to-resize.js"],
 			"run_at": "document_end"
 		}
 	]

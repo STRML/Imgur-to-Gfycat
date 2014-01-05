@@ -1,4 +1,6 @@
-var request = superagent;
+"use strict";
+
+var request = window.superagent;
 var gfyEndpoints = {
   transcode: 'http://upload.gfycat.com/transcode/',
   transcodeRelease: 'http://upload.gfycat.com/transcodeRelease/',
