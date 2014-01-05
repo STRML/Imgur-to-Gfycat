@@ -1,3 +1,8 @@
+v1.2.0
+------
+* Gfycat gifs/videos can now be dragged to resize, much like images in RES.
+  Doubleclick to restore the original size.
+
 v1.1.3
 ------
 * Fix clicks on gfycat controls opening a new tab when the gfy is surrounded by an anchor (RES, etc).
