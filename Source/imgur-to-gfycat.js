@@ -9,7 +9,10 @@ var gfyEndpoints = {
   fetch: 'http://gfycat.com/fetch/',
   home: 'http://gfycat.com/'
 };
-var gifRegex = /.*imgur.com\/.*\.gif(?:\?.*)?$/;
+var supportedSites = ['imgur.com', 'minus.com', 'photobucket.com', 'imagsy.com', 'giffer.co', 'gifsplosion.com', 
+                      'gifs-planet.com', 'googleusercontent.com', 'instagram.com', 'flickr.com', 'imageshack.com', 
+                      'twitpic.com', '4chan.com', 'picasa.com'];
+var gifRegex = new RegExp(".*(" + supportedSites.join('|') + ")/.*\\.gif(?:\\?.*)?$");
 var forEach = Array.prototype.forEach.call.bind(Array.prototype.forEach);
 var slice = Array.prototype.slice.call.bind(Array.prototype.slice);
 
