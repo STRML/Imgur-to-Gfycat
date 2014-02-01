@@ -1,3 +1,8 @@
+v1.3.0
+------
+* Added context menu support for converting files that may have been missed, such as non-imgur gifs or
+  gifs with incorrect extensions (such as the many gifs with the .jpg extension on /r/gifs)
+
 v1.2.0
 ------
 * Gfycat gifs/videos can now be dragged to resize, much like images in RES.
