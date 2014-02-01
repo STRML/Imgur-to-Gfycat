@@ -5,13 +5,16 @@
 	"version": "1.2.0",
 	"description": "Replaces imgur gifs with gfycat optimized videos and gifs.",
 	"icons": {
-		"128": "icon.png"
+		"16": "icon-bitty.png",
+		"48": "icon-small.png",
+		"128": "icon-large.png"
 	},
 	"web_accessible_resources": ["gfyembed.js"],
 	"permissions": [
 	  "webRequest",
 	  "webRequestBlocking",
-	  "*://*.imgur.com/*"
+	  "*://*.imgur.com/*",
+	  "contextMenus"
 	],
 	"background": {
 		"scripts" : ["bg.js"],

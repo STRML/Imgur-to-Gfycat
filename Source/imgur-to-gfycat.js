@@ -17,6 +17,7 @@ var slice = Array.prototype.slice.call.bind(Array.prototype.slice);
 (function init(){
   attachMutationObservers();
   scan();
+  addMessageListener();
 })();
 
 // Scan page for <img> and <a> tags to replace.
@@ -49,8 +50,9 @@ function attachMutationObservers(){
 // Replacing a gif on the page is a little more complex. We need to send the fetch
 // request to gfycat so it can create and convert the file. When it finishes, it will redirect
 // to the gfycat link so we can embed into the page.
-function replaceGif(imgNode){
-  if (!isImgurGif(imgNode.src)) return;
+// If `force` is true, the gif will be replaced regardless of validation (imgur).
+function replaceGif(imgNode, force){
+  if (!isImgurGif(imgNode.src) && !force) return;
 
   // If this contains a fetch url (RES creates images from anchors), remove it
   if (imgNode.src.indexOf(gfyEndpoints.fetch) !== -1){
@@ -61,7 +63,7 @@ function replaceGif(imgNode){
   imgNode.style.display = 'none'; // hide while we are waiting for gfycat
 
   // url, cb, errorCb
-  getGfyUrl(imgNode.src, replaceGifWithGfy, revert);
+  getGfyUrl(imgNode.src, replaceGifWithGfy, revert, force);
 
   function replaceGifWithGfy(id){
     // Remove the image and replace with the gfycat stub so gfycat's js can handle it.
@@ -134,7 +136,9 @@ function replaceGif(imgNode){
   function revert(err){
     // Just show the old gif.
     imgNode.style.display = '';
-    imgNode.src += '?ignoreGfy'; // allow us through webRequest blocker
+    if (imgNode.src.slice(-10) !== '?ignoreGfy'){
+      imgNode.src += '?ignoreGfy'; // allow us through webRequest blocker
+    }
   }
 }
 
@@ -154,9 +158,10 @@ function isImgurGif(url){
 // Run /transcodeRelease to get the gfyURL. If the gfy exists, it will immediately be returned
 // and everybody's happy. Otherwise, we return an error which will replace the gif. The image will be transcoded
 // in the background for the next user.
-function getGfyUrl(url, cb, errorCb){
-  var endpoint = gfyEndpoints.transcodeRelease + randomString() + '?fetchUrl=' + encodeURI(url);
-  request.get(gfyEndpoints.transcodeRelease + randomString())
+// If we've forced transcoding (context menu), use /transcode so that we get it the first time - it is safe
+// to assume the user really wants a gfy right now.
+function getGfyUrl(url, cb, errorCb, force){
+  request.get((force ? gfyEndpoints.transcode : gfyEndpoints.transcodeRelease) + randomString())
     .query({fetchUrl: url})
     .end(function(err, res){
       if (err) return errorCb(err);
@@ -202,6 +207,20 @@ function runGfyCat(){
       }
     }, 1);
   }
+}
+
+// Listen to messages from background script. The context menu allows us to translate any 
+// image to gfycat, regardless of extension or origin.
+// Therefore we skip the check in replaceGif (force) and go ahead and feed it into gfycat's embed code.
+function addMessageListener(){
+  chrome.extension.onMessage.addListener(function (message, sender, callback) {
+    if (message.convertToGfyWithURL) {
+      var imgNodes = document.querySelectorAll('img[src="' + message.convertToGfyWithURL + '"]');
+      for(var i = 0; i < imgNodes.length; i++){
+        replaceGif(imgNodes[i], true /* force */);
+      }
+    }
+  });
 }
 
 //

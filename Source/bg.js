@@ -1,6 +1,8 @@
+'use strict';
 var gifRegex = /.*imgur.com\/.*\.gif(?:\?.*)?$/;
 
 blockGifLoading();
+createContextMenus();
 
 // Use webRequests API to block eligible gifs from loading to save bandwidth.
 function blockGifLoading(){
@@ -18,3 +20,18 @@ function blockGifLoading(){
 function shouldBlock(url){
   return gifRegex.test(url) && url.indexOf('?ignoreGfy') === -1;
 }
+
+function createContextMenus(){
+  chrome.contextMenus.create({
+    title: "Convert to video with GfyCat",
+    onclick: doConversion,
+    contexts: ["image"]
+  });
+}
+
+function doConversion(info, tab){
+  chrome.tabs.sendMessage(tab.id, {
+    "convertToGfyWithURL": info.srcUrl
+  });
+}
+
