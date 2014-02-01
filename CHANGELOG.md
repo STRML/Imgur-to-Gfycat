@@ -4,7 +4,6 @@ v1.3.1
   [the complete list](https://github.com/STRML/Imgur-to-Gfycat/blob/e39509b64358514c554e1c49f22c9ce75c02d782/Source/imgur-to-gfycat.js#L12)
 * Fixed RES album support.
 
-
 v1.3.0
 ------
 * Added context menu support for converting files that may have been missed, such as non-imgur gifs or
