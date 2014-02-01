@@ -28,26 +28,29 @@ function scan(element){
   if (!element) element = document;
   // Allow elements, docs, and doc fragments. Others are ignored.
   if ([1, 9, 11].indexOf(element.nodeType) === -1 ) return;
+  
+  // Grab eligible items on the page.
   var imgs = element.getElementsByTagName('img');
   var anchors = element.querySelectorAll('a[href*=".gif"]');
 
-  for (var i = 0; i < imgs.length; i++){
-    replaceGif(imgs[i]);
-  }
+  // If an actual anchor or img is passed in, just use that - no chance of
+  // an anchor being nested in an anchor, or an img in an img so this is fine.
+  if (element.nodeName === "A") anchors = [element];
+  if (element.nodeName === "IMG") imgs = [element];
 
-  for (i = 0; i < anchors.length; i++){
-    replaceAnchor(anchors[i]);
-  }
+  // Don't pass functions directly, 'force' might get set
+  forEach(imgs, function(img){replaceGif(img);});
+  forEach(anchors, function(a){replaceAnchor(a);});
 }
 
 // Listen to the page to catch any new anchors or images to convert.
 function attachMutationObservers(){
   var observer = new WebKitMutationObserver(function(mutations) {
     mutations.forEach(function(m){
-      forEach(m.addedNodes, scan);
+      scan(m.target);
     });
   });
-  observer.observe(document.body, { childList: true, subtree: true });
+  observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: 'src', childList: true });
 }
 
 // Replacing a gif on the page is a little more complex. We need to send the fetch
@@ -55,7 +58,11 @@ function attachMutationObservers(){
 // to the gfycat link so we can embed into the page.
 // If `force` is true, the gif will be replaced regardless of validation (imgur).
 function replaceGif(imgNode, force){
-  if (!isImgurGif(imgNode.src) && !force) return;
+  if (!isEligibleGif(imgNode.src) && !force) return;
+  if (imgNode.getAttribute('data-gyffied')) return;
+
+  // don't re-run this (can happen due to mutation observers)
+  imgNode.setAttribute('data-gyffied', true); 
 
   // If this contains a fetch url (RES creates images from anchors), remove it
   if (imgNode.src.indexOf(gfyEndpoints.fetch) !== -1){
@@ -80,6 +87,7 @@ function replaceGif(imgNode, force){
     var gfyImg = document.createElement('img');
     gfyImg.setAttribute('class', 'gfyitem');
     gfyImg.setAttribute('data-id', id);
+    gfyImg.setAttribute('data-gyffied', true);
     parent.appendChild(gfyImg);
 
     // RES
@@ -141,20 +149,21 @@ function replaceGif(imgNode, force){
     imgNode.style.display = '';
     if (imgNode.src.slice(-10) !== '?ignoreGfy'){
       imgNode.src += '?ignoreGfy'; // allow us through webRequest blocker
+      imgNode.setAttribute('data-gyffied', true);
     }
   }
 }
 
 // Replace an anchor link with a link to gfycat's fetch endpoint.
 function replaceAnchor(anchorNode){
-  if (!isImgurGif(anchorNode.href)) return;
+  if (!isEligibleGif(anchorNode.href)) return;
   if (anchorNode.getAttribute('data-gyffied')) return;
   if (anchorNode.href.indexOf(gfyEndpoints.fetch) !== -1) return;
   anchorNode.href = gfyEndpoints.fetch + anchorNode.href;
   anchorNode.setAttribute('data-gyffied', true);
 }
 
-function isImgurGif(url){
+function isEligibleGif(url){
   return gifRegex.test(url);
 }
 
@@ -198,17 +207,15 @@ function runGfyCat(){
 
   // GfyCollection.init() will use document.getElementsByClassName to find gfyable objects
   function initGfy(){
-    // Run now if possible (save 16ms)
-    if (window.gfyCollection && window.gfyCollection.init){
-      return window.gfyCollection.init();
-    }
     // Wait for it to exist on page before running
-    var checkInterval = setInterval(function(){
+    var runGfyEmbedScript = function(){
       if (window.gfyCollection && window.gfyCollection.init){
         window.gfyCollection.init();
-        clearInterval(checkInterval);
+      } else {
+        setTimeout(runGfyEmbedScript, 1);
       }
-    }, 1);
+    };
+    runGfyEmbedScript();
   }
 }
 
