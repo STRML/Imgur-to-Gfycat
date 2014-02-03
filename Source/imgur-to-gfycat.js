@@ -70,7 +70,11 @@ function attachMutationObservers(){
 // If `force` is true, the gif will be replaced regardless of validation (imgur).
 function replaceGif(imgNode, force){
   if (!isEligibleGif(imgNode.src) && !force) return;
-  if (imgNode.getAttribute('data-gyffied')) return;
+  if (imgNode.getAttribute('data-gyffied')){
+    // If we've tried this via the context menu, let the user know something went wrong.
+    if (force) displayGfycatError(); 
+    return;
+  }
 
   // don't re-run this (can happen due to mutation observers)
   imgNode.setAttribute('data-gyffied', true); 
@@ -158,6 +162,25 @@ function replaceGif(imgNode, force){
   function revert(err){
     // Just show the old gif.
     imgNode.style.display = '';
+  }
+
+  function displayGfycatError(){
+    var fadeLength = 2000, fadeDelay = 2000;
+
+    imgNode.insertAdjacentHTML('afterend', 
+      '<div style="transition: opacity ' + (fadeLength / 1000) + 's">' + 
+        '<span class="gfycatError" style="opacity: 1; background: #d9534f; color: white; padding: 4px;">' + 
+          'Error loading from Gfycat. Displaying original image.' + 
+        '</span>' + 
+      '</div>');
+    var errorMsg = imgNode.nextSibling;
+    // Ghetto fade
+    setTimeout(function(){
+      errorMsg.style.opacity = 0;
+      setTimeout(function(){
+        errorMsg.parentNode.removeChild(errorMsg);
+      }, fadeLength);
+    }, fadeDelay);
   }
 }
 
