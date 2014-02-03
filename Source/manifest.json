@@ -11,9 +11,6 @@
 	},
 	"web_accessible_resources": ["gfyembed.js"],
 	"permissions": [
-	  "webRequest",
-	  "webRequestBlocking",
-	  "*://*.imgur.com/*",
 	  "contextMenus"
 	],
 	"background": {

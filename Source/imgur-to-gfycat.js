@@ -18,9 +18,20 @@ var slice = Array.prototype.slice.call.bind(Array.prototype.slice);
 
 // Start.
 (function init(){
+  // Don't gfy direct links - our anchor transformation will take care of clicks from the browser,
+  // but if e.g. a user goes straight to an imgur url, we should support that - let them right click
+  // if they really want a gfy.
+  if (isEligibleGif(window.location.href)) return;
+
+  // Listen to page changes to find new gifs. Useful for catching RES actions and so on.
   attachMutationObservers();
+
+  // Scan the page for current eligible gifs.
   scan();
-  addMessageListener();
+
+  // Listen to messages coming from the background page letting us know the context menu
+  // button (convert to gfy) has been clicked.
+  addContextMenuListener();
 })();
 
 // Scan page for <img> and <a> tags to replace.
@@ -147,10 +158,6 @@ function replaceGif(imgNode, force){
   function revert(err){
     // Just show the old gif.
     imgNode.style.display = '';
-    if (imgNode.src.slice(-10) !== '?ignoreGfy'){
-      imgNode.src += '?ignoreGfy'; // allow us through webRequest blocker
-      imgNode.setAttribute('data-gyffied', true);
-    }
   }
 }
 
@@ -222,7 +229,7 @@ function runGfyCat(){
 // Listen to messages from background script. The context menu allows us to translate any 
 // image to gfycat, regardless of extension or origin.
 // Therefore we skip the check in replaceGif (force) and go ahead and feed it into gfycat's embed code.
-function addMessageListener(){
+function addContextMenuListener(){
   chrome.extension.onMessage.addListener(function (message, sender, callback) {
     if (message.convertToGfyWithURL) {
       var imgNodes = document.querySelectorAll('img[src="' + message.convertToGfyWithURL + '"]');
