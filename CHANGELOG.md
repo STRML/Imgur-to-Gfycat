@@ -1,3 +1,8 @@
+v1.3.2
+------
+* Fixed a bug where gifs would stop animating if they were not loadable from Gfycat.
+* Now displaying an error when a manual conversion fails (error from Gfycat API).
+
 v1.3.1
 ------
 * Added support for minus.com, photobucket.com, and lots more. See 
