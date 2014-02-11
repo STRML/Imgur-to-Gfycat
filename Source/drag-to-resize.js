@@ -26,7 +26,7 @@ function findGfys(rootNode){
   if ([1, 9, 11].indexOf(rootNode.nodeType) === -1 ) return;
   var gfys = rootNode.getElementsByClassName('gfyitem');
   for (var i = 0; i < gfys.length; i++){
-    if (gfys[i].dataset['dragToResize']) return;
+    if (gfys[i].dataset.dragToResize) return;
     if (!gfys[i].firstChild) return; // don't add draggability to stub items
     makeResizable(gfys[i]);
   }
@@ -35,13 +35,22 @@ function findGfys(rootNode){
 // Make a gfynode resizable - adds handlers.
 function makeResizable(gfyNode){
   // Flag so we don't do this again.
-  gfyNode.dataset['dragToResize'] = true;
+  gfyNode.dataset.dragToResize = true;
   // Save w/h for later restoration.
-  gfyNode.dataset['originalW'] = gfyNode.firstChild.style.width.slice(0, -2);
-  gfyNode.dataset['originalH'] = gfyNode.firstChild.style.height.slice(0, -2);
+  gfyNode.dataset.originalW = gfyNode.firstChild.style.width.slice(0, -2);
+  gfyNode.dataset.originalH = gfyNode.firstChild.style.height.slice(0, -2);
+
+  // Set draggable=false on all items above this, so they don't annoyingly start dragging
+  // and screw up the resize 
+  getParents(gfyNode).forEach(function(parent){
+    if (parent.nodeName === "A" || parent.nodeName === "IMG"){
+      parent.setAttribute('draggable', false);
+    }
+  });
 
   // Add handlers.
   gfyNode.addEventListener('mousedown', mouseDownHandler);
+  gfyNode.addEventListener('click', clickHandler);
   gfyNode.addEventListener('dblclick', doubleClickHandler);
 }
 
@@ -57,8 +66,19 @@ function mouseDownHandler(e){
   0.5);
 }
 
+// Prevent page from navigating when a user lets up on the mouse.
+// Keeps dragging from getting a little out of control. 
+function clickHandler(e){
+  if (e.currentTarget.dataset.dragInProgress){
+    delete e.currentTarget.dataset.dragInProgress;
+    e.preventDefault();
+  }
+}
+
+// End the drag.
 function mouseUpHandler(e){
   activeDrag = null, activeDragMult = null;
+  window.cancelAnimationFrame(animFrameRequest);
 }
 
 // Restore original size on doubleclick.
@@ -73,6 +93,7 @@ function mouseMoveHandler(e){
   if (!activeDrag) return;
   if (animFrameRequest) window.cancelAnimationFrame(animFrameRequest);
   animFrameRequest = window.requestAnimationFrame(function(){
+    activeDrag.dataset.dragInProgress = true;
     var mult = getDragSize(activeDrag, e);
     if (mult !== -1){
       var originalSize = getOriginalSize(activeDrag);
@@ -107,6 +128,7 @@ function setSize(gfyNode, w, h){
 // Returns size for image resizing relative to original size(multiplier).
 function getDragSize(el, e)
 {
+  if (!el) return -1;
   var rc = el.getBoundingClientRect();
   var origSize = getOriginalSize(el);
 
@@ -119,4 +141,36 @@ function getDragSize(el, e)
       p((e.clientY - rc.top) / origSize.height, 2), 
     0.5) / activeDragMult
   , 0.25);
+}
+
+
+// UTILS
+
+// Get all parents of an element.
+function getParents(el) {
+    var parents = [];
+
+    var parent = el;
+    while (parent !== document) {
+      parents.push(parent);
+      parent = parent.parentNode;
+    }
+    return parents;
+}
+
+// Return first match in array of nodes for a selector.
+function matchArray(arr, selector){
+  for(var i = 0; i < arr.length; i++){
+    if (elementMatches(arr[i], selector)) return arr[i];
+  }
+}
+
+// Return first matching parent for a selector.
+function matchParents(el, selector) {
+  return matchArray(getParents(el), selector);
+}
+
+// Proxy to element.matchesSelector.
+function elementMatches(el, selector){
+  return (el.matchesSelector ? el.matchesSelector(selector) : el.webkitMatchesSelector(selector));
 }
