@@ -34,6 +34,10 @@ var slice = Array.prototype.slice.call.bind(Array.prototype.slice);
   addContextMenuListener();
 })();
 
+//
+// Scanning
+//
+
 // Scan page for <img> and <a> tags to replace.
 function scan(element){
   if (!element) element = document;
@@ -64,20 +68,24 @@ function attachMutationObservers(){
   observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: 'src', childList: true });
 }
 
+//
+// Replacement
+//
+
 // Replacing a gif on the page is a little more complex. We need to send the fetch
 // request to gfycat so it can create and convert the file. When it finishes, it will redirect
 // to the gfycat link so we can embed into the page.
 // If `force` is true, the gif will be replaced regardless of validation (imgur).
 function replaceGif(imgNode, force){
   if (!isEligibleGif(imgNode.src) && !force) return;
-  if (imgNode.getAttribute('data-gyffied')){
+  if (imgNode.dataset.gyffied){
     // If we've tried this via the context menu, let the user know something went wrong.
-    if (force) displayGfycatError(); 
+    if (force) displayGfycatError();
     return;
   }
 
   // don't re-run this (can happen due to mutation observers)
-  imgNode.setAttribute('data-gyffied', true); 
+  imgNode.dataset.gyffied = true; 
 
   // If this contains a fetch url (RES creates images from anchors), remove it
   if (imgNode.src.indexOf(gfyEndpoints.fetch) !== -1){
@@ -91,25 +99,19 @@ function replaceGif(imgNode, force){
   getGfyUrl(imgNode.src, replaceGifWithGfy, revert, force);
 
   function replaceGifWithGfy(id){
-    // Remove the image and replace with the gfycat stub so gfycat's js can handle it.
-    parent.removeChild(imgNode);
-
-    // Remove any RES placeholders nearby.
-    var RESPlaceholders = parent.getElementsByClassName('RESImagePlaceholder');
-    forEach(RESPlaceholders, parent.removeChild.bind(parent));
 
     // Create gfy img tag, which will be picked up by their js.
     var gfyImg = document.createElement('img');
     gfyImg.setAttribute('class', 'gfyitem');
-    gfyImg.setAttribute('data-id', id);
-    gfyImg.setAttribute('data-gyffied', true);
+    gfyImg.dataset.id = id;
+    gfyImg.dataset.gyffied = true;
     parent.appendChild(gfyImg);
 
     // RES
-    handleRES(parent);
+    handleRES(imgNode);
 
     // Fix anchor navigation
-    preventRedirectOnCtrlClick(parent);
+    preventRedirectOnGfyCtlClick(imgNode);
 
     // Update any anchors to the new gfy url. Replace those prepended with /fetch/ and without.
     [gfyEndpoints.fetch + imgNode.src, imgNode.src].forEach(function(src){
@@ -122,54 +124,17 @@ function replaceGif(imgNode, force){
     runGfyCat();
   }
 
-  // RES hacks
-  function handleRES(parent){
-    // RES detection
-    if(!parent.classList.contains('madeVisible')) return;
-
-    // Fix overflow
-    parent.addEventListener('mouseover', function(){ this.style['padding-bottom'] = '60px'; });
-    parent.addEventListener('mouseout', function(){ this.style['padding-bottom'] = '0px'; });
-    parent.style.transition = 'padding 0.5s';
-  }
-
-  // Fix controls (surrounding anchor causes redirect)
-  function preventRedirectOnCtrlClick(parent){
-    // Find any enclosing anchor tags
-    while(parent){
-      if (parent.tagName === "A"){
-        addCancelListener(parent);
-      }
-      parent = parent.parentNode;
-    }
-
-    // Cancel clicks if the target is a descendant of the ctrlbox
-    function addCancelListener(el){
-      el.addEventListener('click', function(e){
-        var target = e.target;
-        while(target){
-          // Cancel event if we hit a ctrl widget
-          if (target.classList.contains('gfyCtrlBox')){
-            e.preventDefault();
-            break;
-          }
-          target = target.parentNode;
-        }
-      });
-    }
-  }
-
   function revert(err){
     // Just show the old gif.
     imgNode.style.display = '';
   }
 
   function displayGfycatError(){
-    var fadeLength = 2000, fadeDelay = 2000;
+    var fadeLength = 3000, fadeDelay = 2000;
 
     imgNode.insertAdjacentHTML('afterend', 
       '<div style="transition: opacity ' + (fadeLength / 1000) + 's">' + 
-        '<span class="gfycatError" style="opacity: 1; background: #d9534f; color: white; padding: 4px;">' + 
+        '<span class="gfycatError" style="opacity: 1; background: #d9534f; color: white; padding: 4px; z-index: 99999;">' + 
           'Error loading from Gfycat. Displaying original image.' + 
         '</span>' + 
       '</div>');
@@ -187,15 +152,15 @@ function replaceGif(imgNode, force){
 // Replace an anchor link with a link to gfycat's fetch endpoint.
 function replaceAnchor(anchorNode){
   if (!isEligibleGif(anchorNode.href)) return;
-  if (anchorNode.getAttribute('data-gyffied')) return;
+  if (anchorNode.dataset.gyffied) return;
   if (anchorNode.href.indexOf(gfyEndpoints.fetch) !== -1) return;
   anchorNode.href = gfyEndpoints.fetch + anchorNode.href;
-  anchorNode.setAttribute('data-gyffied', true);
+  anchorNode.dataset.gyffied = true;
 }
 
-function isEligibleGif(url){
-  return gifRegex.test(url);
-}
+//
+// GfyCat interaction
+//
 
 // Run /transcodeRelease to get the gfyURL. If the gfy exists, it will immediately be returned
 // and everybody's happy. Otherwise, we return an error which will replace the gif. The image will be transcoded
@@ -249,6 +214,102 @@ function runGfyCat(){
   }
 }
 
+
+//
+// Page Tweaks & Fixes
+//
+
+// RES hacks
+function handleRES(imgNode){
+  var parent = imgNode.parentNode;
+  // Remove the image from view replace with the gfycat stub so gfycat's js can handle it.
+  // Important NOT to remove it so we don't break RES.
+  imgNode.style.display = '';
+  imgNode.dataset.originalStyles = imgNode.style.cssText;
+  imgNode.style.cssText = 'display: none !important;';
+
+  // Hide any RES placeholders nearby.
+  var RESPlaceholders = parent.getElementsByClassName('RESImagePlaceholder');
+  forEach(RESPlaceholders, function(placeholder){
+    placeholder.style.cssText = 'display: none !important';
+  });
+
+  // RES detection
+  if(!parent.classList.contains('madeVisible')) return;
+
+  // Fix overflow
+  parent.addEventListener('mouseover', addPadding);
+  parent.addEventListener('mouseout', removePadding);
+  parent.style.transition = 'padding 0.5s';
+
+  // Upon a click of an RES gallery control, remove the gfy and reset the imgNode.
+  var controls = matchParents(imgNode, '.entry').querySelector('.RESGalleryControls');
+  controls && controls.addEventListener('click', function cleanup(e){
+    e.currentTarget.removeEventListener('click', cleanup);
+    cleanupGfy(imgNode);
+  });
+}
+
+// Fix controls (surrounding anchor causes redirect)
+function preventRedirectOnGfyCtlClick(imgNode){
+  // Find any enclosing anchor tags
+  getParents(imgNode).forEach(function(parent){
+    if (parent.nodeName === "A") addCancelListener(parent);
+  });
+
+  // Cancel clicks if the target is a descendant of the ctrlbox
+  function addCancelListener(el){
+    el.addEventListener('click', function(e){
+      var target = e.target;
+      if (matchParents(target, '.gfyCtrlBox')) {
+        e.preventDefault();
+      }
+    });
+  }
+}
+
+// Clean up a gfy.
+function cleanupGfy(imgNode){
+
+  // Reset original image styles.
+  imgNode.style.cssText = imgNode.dataset.originalStyles;
+  delete imgNode.dataset.originalStyles;
+
+  // Remove gfy.
+  var gfy = imgNode.parentNode.querySelector('.gfyitem');
+  if (gfy) {
+    gfy.parentNode.removeChild(gfy);
+  }
+
+  // Re-add RESImagePlaceholder. Without it, the image has no size and the page will collapse around it.
+  if (imgNode.classList.contains('RESImage')){
+    forEach(imgNode.parentNode.getElementsByClassName('RESImagePlaceholder'), function(placeholder){
+      placeholder.style.cssText = '';
+    });
+  }
+
+  // Remove any leftovers
+  imgNode.parentNode.style['padding-bottom'] = '0px';
+  delete imgNode.dataset.gyffied;
+
+  // Clean up event listeners
+  imgNode.removeEventListener('click', cleanupGfy);
+  imgNode.parentNode.removeEventListener('mouseover', addPadding);
+  imgNode.parentNode.removeEventListener('mouseout', removePadding);
+}
+
+function addPadding(e){
+  e.currentTarget.style['padding-bottom'] = '60px';
+}
+
+function removePadding(e){
+  e.currentTarget.style['padding-bottom'] = '0px';
+}
+
+//
+// Context Menu
+//
+
 // Listen to messages from background script. The context menu allows us to translate any 
 // image to gfycat, regardless of extension or origin.
 // Therefore we skip the check in replaceGif (force) and go ahead and feed it into gfycat's embed code.
@@ -263,9 +324,12 @@ function addContextMenuListener(){
   });
 }
 
+
 //
 // UTILS
 // 
+
+function isEligibleGif(url){ return gifRegex.test(url); }
 
 function randomString(){
   var c = '';
@@ -274,4 +338,33 @@ function randomString(){
       c += a.charAt(Math.floor(Math.random() * a.length));
   }
   return c;
+}
+
+// Get all parents of an element.
+function getParents(el) {
+    var parents = [];
+
+    var parent = el;
+    while (parent !== document) {
+      parents.push(parent);
+      parent = parent.parentNode;
+    }
+    return parents;
+}
+
+// Return first match in array of nodes for a selector.
+function matchArray(arr, selector){
+  for(var i = 0; i < arr.length; i++){
+    if (elementMatches(arr[i], selector)) return arr[i];
+  }
+}
+
+// Return first matching parent for a selector.
+function matchParents(el, selector) {
+  return matchArray(getParents(el), selector);
+}
+
+// Proxy to element.matchesSelector.
+function elementMatches(el, selector){
+  return (el.matchesSelector ? el.matchesSelector(selector) : el.webkitMatchesSelector(selector));
 }
