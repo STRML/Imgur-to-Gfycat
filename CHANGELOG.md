@@ -1,3 +1,8 @@
+v1.3.3
+------
+* Further fixes to RES galleries. They should work well front to back, now.
+* Tweaks to make gfy drag resizing a lot less annoying.
+
 v1.3.2
 ------
 * Fixed a bug where gifs would stop animating if they were not loadable from Gfycat.
