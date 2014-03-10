@@ -56,6 +56,7 @@ function makeResizable(gfyNode){
 
 // On mousedown, set this gfy object as active.
 function mouseDownHandler(e){
+  if (e.which !== 1) return; // left click only
   activeDrag = e.currentTarget;
 
   // Store distance of starting click from boundaries for a more natural feeling drag.
@@ -77,6 +78,7 @@ function clickHandler(e){
 
 // End the drag.
 function mouseUpHandler(e){
+  if (e.which !== 1) return; // left click only
   activeDrag = null, activeDragMult = null;
   window.cancelAnimationFrame(animFrameRequest);
 }
