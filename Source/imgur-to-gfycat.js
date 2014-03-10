@@ -4,6 +4,7 @@
 // If you're looking for init code, look at the bottom of the page.
 var forEach = Array.prototype.forEach.call.bind(Array.prototype.forEach);
 var slice = Array.prototype.slice.call.bind(Array.prototype.slice);
+var utils = window.imgurToGfyCatUtils;
 
 //
 // Scanning
@@ -64,8 +65,9 @@ var Page = {
       imgNode.src = imgNode.src.replace(Gfy.endpoints.fetch, '');
     }
 
-    var parent = imgNode.parentNode;
-    imgNode.style.display = 'none'; // hide while we are waiting for gfycat
+    // hide while we are waiting for gfycat
+    // wtf on the syntax here - have to use setProperty for !important
+    imgNode.style.setProperty('display', 'none', 'important');
 
     // url, cb, errorCb, isForcing
     Gfy.getURL(imgNode.src, replaceGifWithGfy, revert, force);
@@ -147,7 +149,7 @@ var Gfy = {
     gfyImg.dataset.gyffied = true;
     imgNode.parentNode.appendChild(gfyImg);
 
-    // Remove the image from view replace with the gfycat stub so gfycat's js can handle it.
+    // Remove the image from view & replace with the gfycat stub so gfycat's js can handle it.
     // Important NOT to remove it so we don't break RES.
     imgNode.style.display = '';
     imgNode.dataset.originalStyles = imgNode.style.cssText;
@@ -170,7 +172,7 @@ var Gfy = {
   },
 
   // Embed gfycat into the page.
-  embed: function(){
+  embedGfyCatJS: function(){
     // Skip if this has already been done
     if (document.getElementById('gfycatjs')) return;
 
@@ -185,7 +187,7 @@ var Gfy = {
   // Can't invoke this directly as it relies on jsonp, but will execute in this context
   // if invoked here - jsonp callback will fail.
   run: function(){
-    this.embed();
+    this.embedGfyCatJS();
     var script = document.createElement('script');
     script.type = 'text/javascript';
     var script_innards = document.createTextNode("(" + initGfy.toString() + ")();");
@@ -273,7 +275,7 @@ var RESHelpers = {
     var controls = utils.matchParents(imgNode, '.entry').querySelector('.RESGalleryControls');
     controls && controls.addEventListener('click', function cleanup(e){
       e.currentTarget.removeEventListener('click', cleanup);
-      Gfy.cleanupGfy(imgNode);
+      Gfy.cleanup(imgNode);
     });
   }
 };
@@ -299,56 +301,6 @@ var ContextMenu = {
   }
 };
 
-
-//
-// UTILS
-// 
-
-var supportedSites = ['imgur.com', 'minus.com', 'photobucket.com', 'imagsy.com', 'giffer.co', 'gifsplosion.com', 
-                      'gifs-planet.com', 'googleusercontent.com', 'instagram.com', 'flickr.com', 'imageshack.com', 
-                      'twitpic.com', '4chan.com', 'picasa.com'];
-var utils = {
-  gifRegex: new RegExp(".*(" + supportedSites.join('|') + ")/.*\\.gif(?:\\?.*)?$"),
-  isEligibleGif: function(url){ return utils.gifRegex.test(url); },
-
-  randomString: function(){
-    var c = '';
-    var a = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    for (var b = 0; b < 10; b++) {
-        c += a.charAt(Math.floor(Math.random() * a.length));
-    }
-    return c;
-  },
-
-  // Get all parents of an element.
-  getParents: function(el) {
-      var parents = [];
-
-      var parent = el;
-      while (parent !== document) {
-        parents.push(parent);
-        parent = parent.parentNode;
-      }
-      return parents;
-  },
-
-  // Return first match in array of nodes for a selector.
-  matchArray: function(array, selector){
-    for(var i = 0; i < array.length; i++){
-      if (utils.elementMatches(array[i], selector)) return array[i];
-    }
-  },
-
-  // Return first matching parent for a selector.
-  matchParents: function(el, selector) {
-    return utils.matchArray(utils.getParents(el), selector);
-  },
-
-  // Proxy to element.matchesSelector.
-  elementMatches: function(el, selector){
-    return (el.matchesSelector ? el.matchesSelector(selector) : el.webkitMatchesSelector(selector));
-  }
-};
 
 // Start.
 (function init(){

@@ -11,17 +11,17 @@
 	},
 	"web_accessible_resources": ["gfyembed.js"],
 	"permissions": [
-	  "contextMenus"
+	    "contextMenus"
 	],
 	"background": {
-		"scripts" : ["bg.js"],
+		"scripts" : ["shared.js", "bg.js"],
 		"persistent": true
 	},
 	"content_scripts": 
 	[
 		{
 			"matches": ["http://*/*"],
-			"js": ["superagent.js", "imgur-to-gfycat.js", "drag-to-resize.js"],
+			"js": ["superagent.js", "shared.js", "imgur-to-gfycat.js", "drag-to-resize.js"],
 			"css": ["gfytweaks.css"],
 			"run_at": "document_end"
 		}

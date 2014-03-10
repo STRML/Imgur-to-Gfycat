@@ -1,4 +1,5 @@
 "use strict";
+var utils = window.imgurToGfyCatUtils;
 var activeDrag, animFrameRequest, activeDragMult;
 var forEach = Array.prototype.forEach.call.bind(Array.prototype.forEach);
 var p = Math.pow;
@@ -42,7 +43,7 @@ function makeResizable(gfyNode){
 
   // Set draggable=false on all items above this, so they don't annoyingly start dragging
   // and screw up the resize 
-  getParents(gfyNode).forEach(function(parent){
+  utils.getParents(gfyNode).forEach(function(parent){
     if (parent.nodeName === "A" || parent.nodeName === "IMG"){
       parent.setAttribute('draggable', false);
     }
@@ -143,36 +144,4 @@ function getDragSize(el, e)
       p((e.clientY - rc.top) / origSize.height, 2), 
     0.5) / activeDragMult
   , 0.25);
-}
-
-
-// UTILS
-
-// Get all parents of an element.
-function getParents(el) {
-    var parents = [];
-
-    var parent = el;
-    while (parent !== document) {
-      parents.push(parent);
-      parent = parent.parentNode;
-    }
-    return parents;
-}
-
-// Return first match in array of nodes for a selector.
-function matchArray(arr, selector){
-  for(var i = 0; i < arr.length; i++){
-    if (elementMatches(arr[i], selector)) return arr[i];
-  }
-}
-
-// Return first matching parent for a selector.
-function matchParents(el, selector) {
-  return matchArray(getParents(el), selector);
-}
-
-// Proxy to element.matchesSelector.
-function elementMatches(el, selector){
-  return (el.matchesSelector ? el.matchesSelector(selector) : el.webkitMatchesSelector(selector));
 }

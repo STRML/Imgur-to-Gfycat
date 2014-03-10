@@ -1,5 +1,5 @@
 'use strict';
-createContextMenus();
+var utils = window.imgurToGfyCatUtils;
 
 function createContextMenus(){
   chrome.contextMenus.create({
@@ -15,3 +15,6 @@ function doConversion(info, tab){
   });
 }
 
+(function init(){
+  createContextMenus();
+})();
