@@ -1,0 +1,8 @@
+.gfyCtrlBox {
+	z-index: 99999 !important; /* place it above the image where it belongs */
+	background-color: rgba(0, 84, 165, 0.8) !important;
+}
+
+.gfyCtrlTabPull {
+	display: none; /* not needed */
+}
