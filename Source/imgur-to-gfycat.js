@@ -132,6 +132,7 @@ var Page = {
 //
 
 var Gfy = {
+  cachedGfys: {},
   endpoints: {
     transcode: 'http://upload.gfycat.com/transcode/',
     transcodeRelease: 'http://upload.gfycat.com/transcodeRelease/',
@@ -162,11 +163,18 @@ var Gfy = {
   // If we've forced transcoding (context menu), use /transcode so that we get it the first time - it is safe
   // to assume the user really wants a gfy right now.
   getURL: function(url, cb, errorCb, force){
+    // Grab from cache if possible
+    if (Gfy.cachedGfys[url]) return cb(Gfy.cachedGfys[url]);
+
+    // No cache, make a request.
     window.superagent.get((force ? Gfy.endpoints.transcode : Gfy.endpoints.transcodeRelease) + utils.randomString())
       .query({fetchUrl: url})
       .end(function(err, res){
-        if (err) return errorCb(err);
-        if (res.body.gfyName) cb(res.body.gfyName);
+        if (err) errorCb(err);
+        else if (res.body.gfyName){
+          Gfy.cachedGfys[url] = res.body.gfyName; // cache it
+          cb(res.body.gfyName);
+        }
         else errorCb(new Error('Transcode in progress'));
       });
   },
