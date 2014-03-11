@@ -1,3 +1,10 @@
+v1.4.0
+------
+* Fixed a bug where the original gif would annoyingly show up before the gfy loaded.
+* Made gfycat controls much more usable and eliminated padding animation on hover.
+* Fixed a bug where you would resize the gfy on right/middle click.
+* Improved album performance and started caching gfy urls.
+
 v1.3.3
 ------
 * Further fixes to RES galleries. They should work well front to back, now.
@@ -10,7 +17,7 @@ v1.3.2
 
 v1.3.1
 ------
-* Added support for minus.com, photobucket.com, and lots more. See 
+* Added support for minus.com, photobucket.com, and lots more. See
   [the complete list](https://github.com/STRML/Imgur-to-Gfycat/blob/e39509b64358514c554e1c49f22c9ce75c02d782/Source/imgur-to-gfycat.js#L12)
 * Fixed RES album support.
 
