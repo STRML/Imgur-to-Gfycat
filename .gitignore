@@ -1,2 +1,3 @@
 *.pem
 *.zip
+node_modules/
