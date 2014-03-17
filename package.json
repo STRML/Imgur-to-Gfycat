@@ -5,7 +5,8 @@
   "dependencies": {},
   "devDependencies": {
     "grunt-crx": "~0.3.3",
-    "grunt": "^0.4.3"
+    "grunt": "^0.4.3",
+    "grunt-bumpx": "^0.2.0"
   },
   "repository": {
     "type": "git",
