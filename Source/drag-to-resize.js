@@ -58,6 +58,8 @@ function makeResizable(gfyNode){
 // On mousedown, set this gfy object as active.
 function mouseDownHandler(e){
   if (e.which !== 1) return; // left click only
+  // Don't catch drags in controls
+  if (utils.matchParents(e.target, '.gfyCtrlBox')) return;
   activeDrag = e.currentTarget;
 
   // Store distance of starting click from boundaries for a more natural feeling drag.
@@ -86,7 +88,9 @@ function mouseUpHandler(e){
 
 // Restore original size on doubleclick.
 function doubleClickHandler(e){
-  setSize(e.currentTarget, 
+  // Don't catch doubleclicks in controls
+  if (utils.matchParents(e.target, '.gfyCtrlBox')) return;
+  setSize(e.currentTarget,
     e.currentTarget.dataset['originalW'], e.currentTarget.dataset['originalH']);
   document.getSelection().removeAllRanges(); // prevent selection
 }
