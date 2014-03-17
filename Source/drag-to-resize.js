@@ -42,7 +42,7 @@ function makeResizable(gfyNode){
   gfyNode.dataset.originalH = gfyNode.firstChild.style.height.slice(0, -2);
 
   // Set draggable=false on all items above this, so they don't annoyingly start dragging
-  // and screw up the resize 
+  // and screw up the resize
   utils.getParents(gfyNode).forEach(function(parent){
     if (parent.nodeName === "A" || parent.nodeName === "IMG"){
       parent.setAttribute('draggable', false);
@@ -65,13 +65,13 @@ function mouseDownHandler(e){
   // Store distance of starting click from boundaries for a more natural feeling drag.
   var rc = e.currentTarget.getBoundingClientRect();
   activeDragMult = p(
-    p((e.clientX - rc.left) / rc.width, 2) + 
+    p((e.clientX - rc.left) / rc.width, 2) +
     p((e.clientY - rc.top) / rc.height, 2),
   0.5);
 }
 
 // Prevent page from navigating when a user lets up on the mouse.
-// Keeps dragging from getting a little out of control. 
+// Keeps dragging from getting a little out of control.
 function clickHandler(e){
   if (e.currentTarget.dataset.dragInProgress){
     delete e.currentTarget.dataset.dragInProgress;
@@ -120,7 +120,7 @@ function getOriginalSize(gfyNode){
 // Set gfynode size. We have to set style on the container as well as height/width attrs
 // on the canvas & video.
 function setSize(gfyNode, w, h){
-  var container = gfyNode.firstChild; 
+  var container = gfyNode.firstChild;
   var vid = gfyNode.querySelector('.gfyVid') || {}; // don't crash if gfy changes classes
   var canvas = gfyNode.querySelector('.gfyPreLoadCanvas') || {};
 
@@ -144,8 +144,8 @@ function getDragSize(el, e)
 
   return Math.max(
     p(
-      p((e.clientX - rc.left) / origSize.width, 2) + 
-      p((e.clientY - rc.top) / origSize.height, 2), 
+      p((e.clientX - rc.left) / origSize.width, 2) +
+      p((e.clientY - rc.top) / origSize.height, 2),
     0.5) / activeDragMult
   , 0.25);
 }
