@@ -2,9 +2,9 @@
 set -e
 
 grunt crx
+grunt bump
 cp imgur-to-gfycat.pem Source/key.pem
 zip -r Upload.zip Source
 rm Source/key.pem
-grunt bump
 
 echo "CRX & Zip ready."
