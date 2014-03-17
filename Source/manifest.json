@@ -1,30 +1,42 @@
 {
-	"manifest_version": 2,
-	"name": "Imgur to Gfycat",
-	"short_name": "Imgur to Gfy",
-	"version": "1.4.0",
-	"description": "Replaces animated gifs throughout the internet with gfycat optimized HTML5 videos.",
-	"icons": {
-		"16": "icon-bitty.png",
-		"48": "icon-small.png",
-		"128": "icon-large.png"
-	},
-	"web_accessible_resources": ["gfyembed.js"],
-	"permissions": [
-	    "contextMenus"
-	],
-	"background": {
-		"scripts" : ["shared.js", "bg.js"],
-		"persistent": true
-	},
-	"content_scripts":
-	[
-		{
-			"matches": ["http://*/*"],
-			"js": ["superagent.js", "shared.js", "imgur-to-gfycat.js", "drag-to-resize.js"],
-			"css": ["gfytweaks.css"],
-			"run_at": "document_end"
-		}
-	]
+  "manifest_version": 2,
+  "name": "Imgur to Gfycat",
+  "short_name": "Imgur to Gfy",
+  "version": "1.4.1",
+  "description": "Replaces animated gifs throughout the internet with gfycat optimized HTML5 videos.",
+  "icons": {
+    "16": "icon-bitty.png",
+    "48": "icon-small.png",
+    "128": "icon-large.png"
+  },
+  "web_accessible_resources": [
+    "gfyembed.js"
+  ],
+  "permissions": [
+    "contextMenus"
+  ],
+  "background": {
+    "scripts": [
+      "shared.js",
+      "bg.js"
+    ],
+    "persistent": true
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*"
+      ],
+      "js": [
+        "superagent.js",
+        "shared.js",
+        "imgur-to-gfycat.js",
+        "drag-to-resize.js"
+      ],
+      "css": [
+        "gfytweaks.css"
+      ],
+      "run_at": "document_end"
+    }
+  ]
 }
-

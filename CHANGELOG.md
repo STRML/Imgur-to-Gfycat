@@ -1,3 +1,8 @@
+v1.4.1
+------
+* Doubleclicking gfycat controls will no longer cause the zoom level to change.
+* Fixed a control display issue in comment threads caused by an RES change.
+
 v1.4.0
 ------
 * Fixed a bug where the original gif would annoyingly show up before the gfy loaded.
