@@ -1,3 +1,7 @@
+v1.4.2
+------
+* Fixed broken google pagespeed lazy loading.
+
 v1.4.1
 ------
 * Doubleclicking gfycat controls will no longer cause the zoom level to change.
