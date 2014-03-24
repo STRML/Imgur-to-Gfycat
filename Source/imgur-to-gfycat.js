@@ -51,6 +51,7 @@ var Page = {
   // If `force` is true, the gif will be replaced regardless of validation (imgur).
   replaceGif: function(imgNode, force){
     if (!utils.isEligibleGif(imgNode.src) && !force) return;
+    if (imgNode.hasAttribute('pagespeed_lazy_src')) return; // don't break pagespeed lazy loading
     if (imgNode.dataset.gyffied){
       // If we've tried this via the context menu, let the user know something went wrong.
       if (force) displayGfycatError();
