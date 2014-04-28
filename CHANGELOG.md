@@ -1,3 +1,7 @@
+v1.4.3
+------
+* Gfycat videos can now be reverted back to GIFs via the right-click menu.
+
 v1.4.2
 ------
 * Fixed broken google pagespeed lazy loading.
