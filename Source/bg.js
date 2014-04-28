@@ -7,11 +7,22 @@ function createContextMenus(){
     onclick: doConversion,
     contexts: ["image"]
   });
+  chrome.contextMenus.create({
+    title: "Revert GfyCat Video to GIF",
+    onclick: doReversion,
+    contexts: ["video"]
+  });
 }
 
 function doConversion(info, tab){
   chrome.tabs.sendMessage(tab.id, {
     "convertToGfyWithURL": info.srcUrl
+  });
+}
+
+function doReversion(info, tab) {
+  chrome.tabs.sendMessage(tab.id, {
+    "revertToGIFWithURL": info.srcUrl
   });
 }
 

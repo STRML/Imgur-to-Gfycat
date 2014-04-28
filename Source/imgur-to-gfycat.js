@@ -52,6 +52,10 @@ var Page = {
   replaceGif: function(imgNode, force){
     if (!utils.isEligibleGif(imgNode.src) && !force) return;
     if (imgNode.hasAttribute('pagespeed_lazy_src')) return; // don't break pagespeed lazy loading
+    // Don't replace unless a force was given; this happens when a user reverts, then converts again
+    if (imgNode.dataset.reverted && !force) {
+      return;
+    }
     if (imgNode.dataset.gyffied){
       // If we've tried this via the context menu, let the user know something went wrong.
       if (force) displayGfycatError();
@@ -250,12 +254,13 @@ var Gfy = {
     // Re-add RESImagePlaceholder. Without it, the image has no size and the page will collapse around it.
     if (imgNode.classList.contains('RESImage')){
       forEach(imgNode.parentNode.getElementsByClassName('RESImagePlaceholder'), function(placeholder){
-        placeholder.style.cssText = '';
+        placeholder.style.cssText = 'width:' + imgNode.offsetWidth + 'px;height:' + imgNode.offsetHeight + 'px;';
       });
     }
 
-    // Remove any leftovers
+    // Set reverted flag.
     delete imgNode.dataset.gyffied;
+    imgNode.dataset.reverted = true;
 
     // Clean up event listeners
     imgNode.removeEventListener('click', Gfy.cleanup);
@@ -300,10 +305,19 @@ var ContextMenu = {
   // Therefore we skip the check in replaceGif (force) and go ahead and feed it into gfycat's embed code.
   addListener: function(){
     chrome.extension.onMessage.addListener(function (message, sender, callback) {
+      var i;
       if (message.convertToGfyWithURL) {
         var imgNodes = document.querySelectorAll('img[src="' + message.convertToGfyWithURL + '"]');
-        for(var i = 0; i < imgNodes.length; i++){
+        for(i = 0; i < imgNodes.length; i++){
           Page.replaceGif(imgNodes[i], true /* force */);
+        }
+      }
+      else if (message.revertToGIFWithURL) {
+        var srcNodes = document.querySelectorAll('source[src="' + message.revertToGIFWithURL + '"]');
+        for(i = 0; i < srcNodes.length; i++){
+          var gfyItem = utils.matchParents(srcNodes[i], '.gfyitem');
+          var imgNode = gfyItem.parentNode.querySelector('[data-gyffied=true]');
+          Gfy.cleanup(imgNode);
         }
       }
     });

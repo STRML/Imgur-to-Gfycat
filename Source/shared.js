@@ -22,14 +22,14 @@ window.imgurToGfyCatUtils = utils = {
 
   // Get all parents of an element.
   getParents: function(el) {
-      var parents = [];
+    var parents = [];
 
-      var parent = el;
-      while (parent !== document) {
-        parents.push(parent);
-        parent = parent.parentNode;
-      }
-      return parents;
+    var parent = el;
+    while (parent !== document) {
+      parents.push(parent);
+      parent = parent.parentNode;
+    }
+    return parents;
   },
 
   // Return first match in array of nodes for a selector.
