@@ -1,3 +1,8 @@
+v1.4.4
+------
+* Gfys will now be the correct size when replacing a GIF that has been manipulated via CSS to be
+  smaller than its original size.
+
 v1.4.3
 ------
 * Gfycat videos can now be reverted back to GIFs via the right-click menu.
