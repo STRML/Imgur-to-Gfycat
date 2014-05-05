@@ -65,6 +65,11 @@ var Page = {
     // don't re-run this (can happen due to mutation observers)
     imgNode.dataset.gyffied = true; 
 
+    // Record original width and height
+    var imgRect = imgNode.getBoundingClientRect();
+    imgNode.dataset.originalW = imgRect.width;
+    imgNode.dataset.originalH = imgRect.height;
+
     // If this contains a fetch url (RES creates images from anchors), remove it
     if (imgNode.src.indexOf(Gfy.endpoints.fetch) !== -1){
       imgNode.src = imgNode.src.replace(Gfy.endpoints.fetch, '');
@@ -149,11 +154,34 @@ var Gfy = {
 
   // Create gfy img tag, which will be picked up by their js.
   createTag: function(id, imgNode) {
+
+    // Create enclosing span and style tag so we can get the width/height right on this.
+    // Yeah, this kind of sucks, but it prevents a situation where a downscaled gif is replaced
+    // by a full-size Gfy and screws up page layouts.
+    var gfyWrapper = document.createElement('span');
+    gfyWrapper.id = id + '-wrapper';
+    gfyWrapper.setAttribute('class', 'gfyitem-wrapper');
+    var gfyStyle = document.createElement('style');
+    var wrapperID = '#' + id + '-wrapper';
+    if (Number(imgNode.dataset.originalW) && Number(imgNode.dataset.originalH)) {
+      gfyStyle.innerText = 
+          wrapperID + ' .gfyitem > div,' + 
+          wrapperID + ' .gfyPreLoadCanvas,' + 
+          wrapperID + ' .gfyVid' +
+          '{width: ' + imgNode.dataset.originalW + 'px !important;' + 
+          ' height: ' + imgNode.dataset.originalH + 'px !important;}';
+    }
+
+    // This image will be replaced.
     var gfyImg = document.createElement('img');
     gfyImg.setAttribute('class', 'gfyitem');
     gfyImg.dataset.id = id;
     gfyImg.dataset.gyffied = true;
-    imgNode.parentNode.appendChild(gfyImg);
+
+    // Throw them in the DOM.
+    gfyWrapper.appendChild(gfyStyle);
+    gfyWrapper.appendChild(gfyImg);
+    imgNode.parentNode.appendChild(gfyWrapper);
 
     // Remove the image from view & replace with the gfycat stub so gfycat's js can handle it.
     // Important NOT to remove it so we don't break RES.
@@ -246,7 +274,7 @@ var Gfy = {
     delete imgNode.dataset.originalStyles;
 
     // Remove gfy.
-    var gfy = imgNode.parentNode.querySelector('.gfyitem');
+    var gfy = imgNode.parentNode.querySelector('.gfyitem-wrapper');
     if (gfy) {
       gfy.parentNode.removeChild(gfy);
     }
@@ -316,7 +344,7 @@ var ContextMenu = {
         var srcNodes = document.querySelectorAll('source[src="' + message.revertToGIFWithURL + '"]');
         for(i = 0; i < srcNodes.length; i++){
           var gfyItem = utils.matchParents(srcNodes[i], '.gfyitem');
-          var imgNode = gfyItem.parentNode.querySelector('[data-gyffied=true]');
+          var imgNode = gfyItem.parentNode.parentNode.querySelector('[data-gyffied=true]');
           Gfy.cleanup(imgNode);
         }
       }
