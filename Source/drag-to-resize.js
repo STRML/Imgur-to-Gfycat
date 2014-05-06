@@ -38,9 +38,8 @@ function makeResizable(gfyNode){
   // Flag so we don't do this again.
   gfyNode.dataset.dragToResize = true;
   // Save w/h for later restoration.
-  gfyNode.dataset.originalW = gfyNode.firstChild.style.width.slice(0, -2);
-  gfyNode.dataset.originalH = gfyNode.firstChild.style.height.slice(0, -2);
-
+  gfyNode.dataset.originalW = gfyNode.firstChild.getBoundingClientRect().width;
+  gfyNode.dataset.originalH = gfyNode.firstChild.getBoundingClientRect().height;
   // Set draggable=false on all items above this, so they don't annoyingly start dragging
   // and screw up the resize
   utils.getParents(gfyNode).forEach(function(parent){
@@ -90,7 +89,7 @@ function mouseUpHandler(e){
 function doubleClickHandler(e){
   // Don't catch doubleclicks in controls
   if (utils.matchParents(e.target, '.gfyCtrlBox')) return;
-  setSize(e.currentTarget,
+  utils.setGfySize(e.currentTarget,
     e.currentTarget.dataset['originalW'], e.currentTarget.dataset['originalH']);
   document.getSelection().removeAllRanges(); // prevent selection
 }
@@ -104,7 +103,7 @@ function mouseMoveHandler(e){
     var mult = getDragSize(activeDrag, e);
     if (mult !== -1){
       var originalSize = getOriginalSize(activeDrag);
-      setSize(activeDrag, originalSize.width * mult, originalSize.height * mult);
+      utils.setGfySize(activeDrag, originalSize.width * mult, originalSize.height * mult);
     }
 
     document.getSelection().removeAllRanges(); // prevent selection
@@ -115,21 +114,6 @@ function mouseMoveHandler(e){
 // Get the original size of the gfy.
 function getOriginalSize(gfyNode){
   return {width: gfyNode.dataset['originalW'], height: gfyNode.dataset['originalH']};
-}
-
-// Set gfynode size. We have to set style on the container as well as height/width attrs
-// on the canvas & video.
-function setSize(gfyNode, w, h){
-  var container = gfyNode.firstChild;
-  var vid = gfyNode.querySelector('.gfyVid') || {}; // don't crash if gfy changes classes
-  var canvas = gfyNode.querySelector('.gfyPreLoadCanvas') || {};
-
-  container.style.width = w + 'px';
-  container.style.height = h + 'px';
-  vid.width = w;
-  vid.height = h;
-  canvas.width = w;
-  canvas.height = h;
 }
 
 // Returns size for image resizing relative to original size(multiplier).

@@ -155,39 +155,33 @@ var Gfy = {
   // Create gfy img tag, which will be picked up by their js.
   createTag: function(id, imgNode) {
 
-    // Create enclosing span and style tag so we can get the width/height right on this.
-    // Yeah, this kind of sucks, but it prevents a situation where a downscaled gif is replaced
-    // by a full-size Gfy and screws up page layouts.
-    var gfyWrapper = document.createElement('span');
-    gfyWrapper.id = id + '-wrapper';
-    gfyWrapper.setAttribute('class', 'gfyitem-wrapper');
-    var gfyStyle = document.createElement('style');
-    var wrapperID = '#' + id + '-wrapper';
-    if (Number(imgNode.dataset.originalW) && Number(imgNode.dataset.originalH)) {
-      gfyStyle.innerText = 
-          wrapperID + ' .gfyitem > div,' + 
-          wrapperID + ' .gfyPreLoadCanvas,' + 
-          wrapperID + ' .gfyVid' +
-          '{width: ' + imgNode.dataset.originalW + 'px !important;' + 
-          ' height: ' + imgNode.dataset.originalH + 'px !important;}';
-    }
-
     // This image will be replaced.
     var gfyImg = document.createElement('img');
     gfyImg.setAttribute('class', 'gfyitem');
     gfyImg.dataset.id = id;
     gfyImg.dataset.gyffied = true;
 
-    // Throw them in the DOM.
-    gfyWrapper.appendChild(gfyStyle);
-    gfyWrapper.appendChild(gfyImg);
-    imgNode.parentNode.appendChild(gfyWrapper);
+    // Throw it in the DOM.
+    imgNode.parentNode.appendChild(gfyImg);
 
     // Remove the image from view & replace with the gfycat stub so gfycat's js can handle it.
     // Important NOT to remove it so we don't break RES.
     imgNode.style.display = '';
     imgNode.dataset.originalStyles = imgNode.style.cssText;
     imgNode.style.cssText = 'display: none !important;';
+
+    // When the gfy video appears, set its width and height properly so that it does not blow up the page.
+    if (Number(imgNode.dataset.originalW) && Number(imgNode.dataset.originalH)) {
+      var observer = new WebKitMutationObserver(function(mutations) {
+        mutations.forEach(function(mutation){
+          if (mutation.addedNodes.length && mutation.addedNodes[0].classList.contains('gfyitem')) {
+            observer.disconnect(); // No longer needed
+            utils.setGfySize(mutation.addedNodes[0], imgNode.dataset.originalW, imgNode.dataset.originalH);
+          }
+        });
+      });
+      observer.observe(imgNode.parentNode, {childList: true});
+    }
   },
 
   // Run /transcodeRelease to get the gfyURL. If the gfy exists, it will immediately be returned
@@ -274,7 +268,7 @@ var Gfy = {
     delete imgNode.dataset.originalStyles;
 
     // Remove gfy.
-    var gfy = imgNode.parentNode.querySelector('.gfyitem-wrapper');
+    var gfy = imgNode.parentNode.querySelector('.gfyitem');
     if (gfy) {
       gfy.parentNode.removeChild(gfy);
     }
@@ -344,7 +338,7 @@ var ContextMenu = {
         var srcNodes = document.querySelectorAll('source[src="' + message.revertToGIFWithURL + '"]');
         for(i = 0; i < srcNodes.length; i++){
           var gfyItem = utils.matchParents(srcNodes[i], '.gfyitem');
-          var imgNode = gfyItem.parentNode.parentNode.querySelector('[data-gyffied=true]');
+          var imgNode = gfyItem.parentNode.querySelector('[data-gyffied=true]');
           Gfy.cleanup(imgNode);
         }
       }

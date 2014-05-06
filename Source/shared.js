@@ -20,6 +20,21 @@ window.imgurToGfyCatUtils = utils = {
     return c;
   },
 
+  // Set gfynode size. We have to set style on the container as well as height/width attrs
+  // on the canvas & video.
+  setGfySize: function(gfyNode, w, h) {
+    var container = gfyNode.firstChild;
+    var vid = gfyNode.querySelector('.gfyVid') || {}; // don't crash if gfy changes classes
+    var canvas = gfyNode.querySelector('.gfyPreLoadCanvas') || {};
+
+    container.style.width = w + 'px';
+    container.style.height = h + 'px';
+    vid.width = w;
+    vid.height = h;
+    canvas.width = w;
+    canvas.height = h;
+  },
+
   // Get all parents of an element.
   getParents: function(el) {
     var parents = [];
