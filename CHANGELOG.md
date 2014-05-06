@@ -1,3 +1,8 @@
+v1.4.5
+------
+* Fixed a bug where a GIF displayed smaller than its original size via CSS would cause the converted
+gfy to have a size ceiling.
+
 v1.4.4
 ------
 * Gfys will now be the correct size when replacing a GIF that has been manipulated via CSS to be
