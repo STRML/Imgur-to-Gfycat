@@ -22,5 +22,5 @@ To improve the user experience, gifs are only replaced with gfycat videos if the
 on gfycat's servers. Otherwise, the original gif is shown. As soon as one user - anywhere - views that gif 
 on gfycat, all users will see the transcoded version when using this extension.
 
-[Supported Site List](https://github.com/STRML/Imgur-to-Gfycat/blob/e39509b64358514c554e1c49f22c9ce75c02d782/Source/imgur-to-gfycat.js#L12)
+[Supported Site List](https://github.com/STRML/Imgur-to-Gfycat/blob/master/Source/shared.js)
 
