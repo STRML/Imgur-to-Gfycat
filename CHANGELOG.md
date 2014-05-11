@@ -1,3 +1,7 @@
+v1.4.6
+------
+* Prevent extremely small erroneous autoresizing caused an interaction with RES.
+
 v1.4.5
 ------
 * Fixed a bug where a GIF displayed smaller than its original size via CSS would cause the converted
