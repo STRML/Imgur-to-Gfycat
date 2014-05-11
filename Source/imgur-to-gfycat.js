@@ -152,6 +152,24 @@ var Gfy = {
     home: 'http://gfycat.com/'
   },
 
+  // Resize a gfy based on the original size of the gif it replaced.
+  autoResize: function(imgNode) {
+    // When the gfy video appears, set its width and height properly so that it does not blow up the page.
+    if (Number(imgNode.dataset.originalW) && Number(imgNode.dataset.originalH)) {
+      var observer = new WebKitMutationObserver(function(mutations) {
+        mutations.forEach(function(mutation){
+          if (mutation.addedNodes.length && mutation.addedNodes[0].classList.contains('gfyitem')) {
+            observer.disconnect(); // No longer needed
+            utils.setGfySize(mutation.addedNodes[0], imgNode.dataset.originalW, 
+              // Don't allow the size to get smaller than the gfycat controls.
+              Math.max(50, imgNode.dataset.originalH));
+          }
+        });
+      });
+      observer.observe(imgNode.parentNode, {childList: true});
+    }
+  },
+
   // Create gfy img tag, which will be picked up by their js.
   createTag: function(id, imgNode) {
 
@@ -170,17 +188,10 @@ var Gfy = {
     imgNode.dataset.originalStyles = imgNode.style.cssText;
     imgNode.style.cssText = 'display: none !important;';
 
-    // When the gfy video appears, set its width and height properly so that it does not blow up the page.
-    if (Number(imgNode.dataset.originalW) && Number(imgNode.dataset.originalH)) {
-      var observer = new WebKitMutationObserver(function(mutations) {
-        mutations.forEach(function(mutation){
-          if (mutation.addedNodes.length && mutation.addedNodes[0].classList.contains('gfyitem')) {
-            observer.disconnect(); // No longer needed
-            utils.setGfySize(mutation.addedNodes[0], imgNode.dataset.originalW, imgNode.dataset.originalH);
-          }
-        });
-      });
-      observer.observe(imgNode.parentNode, {childList: true});
+    // Autoresize the gfy based on the size of the original GIF. Don't do this on reddit
+    // as there are bad interactions with RES.
+    if (!utils.isReddit()) {
+      Gfy.autoResize(imgNode);
     }
   },
 
@@ -298,14 +309,14 @@ var RESHelpers = {
   tweakImageWrapper: function(imgNode) {
     var parent = imgNode.parentNode;
 
+    // RES detection
+    if(!parent.classList.contains('madeVisible')) return;
+
     // Hide any RES placeholders nearby.
     var RESPlaceholders = parent.getElementsByClassName('RESImagePlaceholder');
     forEach(RESPlaceholders, function(placeholder){
       placeholder.style.cssText = 'display: none !important';
     });
-
-    // RES detection
-    if(!parent.classList.contains('madeVisible')) return;
 
     // Upon a click of an RES gallery control, remove the gfy and reset the imgNode.
     var controls = utils.matchParents(imgNode, '.entry').querySelector('.RESGalleryControls');

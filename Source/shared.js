@@ -9,7 +9,9 @@ var supportedSites = ['imgur.com', 'minus.com', 'photobucket.com', 'imagsy.com',
 var utils;
 window.imgurToGfyCatUtils = utils = {
   gifRegex: new RegExp(".*(" + supportedSites.join('|') + ")/.*\\.gif(?:\\?.*)?$"),
+  redditRegex: /https?:\/\/.*\.reddit\.com.*/,
   isEligibleGif: function(url){ return utils.gifRegex.test(url); },
+  isReddit: function() { return utils.redditRegex.test(window.location.href); },
 
   randomString: function(){
     var c = '';
