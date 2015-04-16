@@ -16,7 +16,7 @@ var Page = {
     if (!element) element = document;
     // Allow elements, docs, and doc fragments. Others are ignored.
     if ([1, 9, 11].indexOf(element.nodeType) === -1 ) return;
-    
+
     // Grab eligible items on the page.
     var imgs = element.getElementsByTagName('img');
     var anchors = element.querySelectorAll('a[href*=".gif"]');
@@ -33,12 +33,12 @@ var Page = {
 
   // Listen to the page to catch any new anchors or images to convert.
   attachMutationObservers: function(){
-    var observer = new WebKitMutationObserver(function(mutations) {
+    var observer = new MutationObserver(function(mutations) {
       mutations.forEach(function(m){
         Page.scan(m.target);
       });
     });
-    observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: 'src', childList: true });
+    observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['src'], childList: true });
   },
 
   //
@@ -63,7 +63,7 @@ var Page = {
     }
 
     // don't re-run this (can happen due to mutation observers)
-    imgNode.dataset.gyffied = true; 
+    imgNode.dataset.gyffied = true;
 
     // Record original width and height
     var imgRect = imgNode.getBoundingClientRect();
@@ -110,11 +110,11 @@ var Page = {
     function displayGfycatError(){
       var fadeLength = 3000, fadeDelay = 2000;
 
-      imgNode.insertAdjacentHTML('afterend', 
-        '<div style="transition: opacity ' + (fadeLength / 1000) + 's">' + 
-          '<span class="gfycatError" style="opacity: 1; background: #d9534f; color: white; padding: 4px; z-index: 99999;">' + 
-            'Error loading from Gfycat. Displaying original image.' + 
-          '</span>' + 
+      imgNode.insertAdjacentHTML('afterend',
+        '<div style="transition: opacity ' + (fadeLength / 1000) + 's">' +
+          '<span class="gfycatError" style="opacity: 1; background: #d9534f; color: white; padding: 4px; z-index: 99999;">' +
+            'Error loading from Gfycat. Displaying original image.' +
+          '</span>' +
         '</div>');
       var errorMsg = imgNode.nextSibling;
       // Ghetto fade
@@ -160,7 +160,7 @@ var Gfy = {
         mutations.forEach(function(mutation){
           if (mutation.addedNodes.length && mutation.addedNodes[0].classList.contains('gfyitem')) {
             observer.disconnect(); // No longer needed
-            utils.setGfySize(mutation.addedNodes[0], imgNode.dataset.originalW, 
+            utils.setGfySize(mutation.addedNodes[0], imgNode.dataset.originalW,
               // Don't allow the size to get smaller than the gfycat controls.
               Math.max(50, imgNode.dataset.originalH));
           }
@@ -333,7 +333,7 @@ var RESHelpers = {
 //
 
 var ContextMenu = {
-  // Listen to messages from background script. The context menu allows us to translate any 
+  // Listen to messages from background script. The context menu allows us to translate any
   // image to gfycat, regardless of extension or origin.
   // Therefore we skip the check in replaceGif (force) and go ahead and feed it into gfycat's embed code.
   addListener: function(){
