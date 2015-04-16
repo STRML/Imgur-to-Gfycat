@@ -1,3 +1,7 @@
+v1.4.7
+------
+* Fix a MutationObserver spec change leading to an error on new browsers.
+
 v1.4.6
 ------
 * Prevent extremely small erroneous autoresizing caused an interaction with RES.
